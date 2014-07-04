@@ -136,13 +136,17 @@ class Client implements ClientInterface
      * @param  string                                      $file
      * @return \JonnyW\PhantomJs\Message\ResponseInterface
      */
-    public function capture(RequestInterface $request, ResponseInterface $response, $file)
+    public function capture(RequestInterface $request, ResponseInterface $response, $file, $delay = 0)
     {
         if (!is_writable(dirname($file))) {
             throw new NotWriteableException(sprintf('Path is not writeable by PhantomJs: %s', $file));
         }
 
-        $cmd = sprintf($this->captureCmd, $file);
+        if ($delay) {
+            $cmd = sprintf($this->captureCmdWithDelay, $file, $delay);
+        } else {
+            $cmd = sprintf($this->captureCmd, $file);
+        }
 
         return $this->request($request, $response, $cmd);
     }
@@ -350,6 +354,27 @@ EOF;
 
             console.log(JSON.stringify(response, undefined, 4));
             phantom.exit();
+EOF;
+
+    /**
+     * PhantomJs screen capture
+     * command template
+     * delay
+     *
+     * @var string
+     */
+    protected $captureCmdWithDelay = <<<EOF
+
+        window.setTimeout(function () {
+            page.render('%1\$s');
+
+            response.content = page.evaluate(function () {
+                return document.getElementsByTagName('html')[0].innerHTML
+            });
+
+            console.log(JSON.stringify(response, undefined, 4));
+            phantom.exit();
+        }, %2\$s);
 EOF;
 
     /**
