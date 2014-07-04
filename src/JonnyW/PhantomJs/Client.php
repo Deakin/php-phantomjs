@@ -304,11 +304,6 @@ class Client implements ClientInterface
         response = {},
         headers = %1\$s;
 
-    page.viewportSize = {
-        width: 800,
-        height: 600
-    };
-
     page.settings.resourceTimeout = %2\$s;
     page.onResourceTimeout = function (e) {
         response 		= e;
