@@ -134,19 +134,25 @@ class Client implements ClientInterface
      * @param  \JonnyW\PhantomJs\Message\RequestInterface  $request
      * @param  \JonnyW\PhantomJs\Message\ResponseInterface $response
      * @param  string                                      $file
+	 * @param  integer                                     $delay
+	 * @param  string                                      $objectById
      * @return \JonnyW\PhantomJs\Message\ResponseInterface
      */
-    public function capture(RequestInterface $request, ResponseInterface $response, $file, $delay = 0)
+    public function capture(RequestInterface $request, ResponseInterface $response, $file, $delay = 0, $objectById = null)
     {
         if (!is_writable(dirname($file))) {
             throw new NotWriteableException(sprintf('Path is not writeable by PhantomJs: %s', $file));
         }
-
-        if ($delay) {
-            $cmd = sprintf($this->captureCmdWithDelay, $file, $delay);
-        } else {
-            $cmd = sprintf($this->captureCmd, $file);
-        }
+		
+		if ($objectById !== null) {
+			$cmd = sprintf($this->captureObjectByIdCmd, $file, $objectById);
+		} else {
+			if ($delay) {
+				$cmd = sprintf($this->captureCmdWithDelay, $file, $delay);
+			} else {
+				$cmd = sprintf($this->captureCmd, $file);
+			}
+		}
 
         return $this->request($request, $response, $cmd);
     }
@@ -375,6 +381,25 @@ EOF;
             console.log(JSON.stringify(response, undefined, 4));
             phantom.exit();
         }, %2\$s);
+EOF;
+
+	/**
+     * PhantomJs object id capture
+     * command template
+     *
+     * @var string
+     */
+    protected $captureObjectByIdCmd = <<<EOF
+
+		var clipRect = page.evaluate(function() {
+			return document.getElementById("%2\$s").getBoundingClientRect(); 
+		});
+
+		page.clipRect = { top: clipRect.top, left: clipRect.left, width: clipRect.width, height: clipRect.height }
+		page.render('%1\$s', {format: 'jpeg', quality: '100'});
+
+		console.log(JSON.stringify(response, undefined, 4));
+		phantom.exit();
 EOF;
 
     /**
