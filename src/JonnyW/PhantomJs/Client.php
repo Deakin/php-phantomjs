@@ -214,7 +214,7 @@ class Client implements ClientInterface
             );
 
             $script = $this->writeScript($data);
-            $cmd  = escapeshellcmd(sprintf("%s %s", $this->phantomJS, $script));
+            $cmd  = escapeshellcmd(sprintf("%s --ssl-protocol=any %s", $this->phantomJS, $script));
 
             $result = shell_exec($cmd);
             $result = $this->parse($result);
